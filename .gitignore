@@ -1,1 +1,7 @@
-./PDB/
+PDB/
+distance.png
+distances.csv
+distancesDF.csv
+IncorrectNumberingPDB.txt
+__pycache__/
+

@@ -1,0 +1,6 @@
+
+conda install -c conda-forge streamlit
+
+
+streamlit run app.py 
+
