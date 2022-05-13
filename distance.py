@@ -95,6 +95,7 @@ def distance(pdb_ids, resid_1,  resid_2):
     st.write(f'There are {len(missing_residue)} chains with chosen residue error:', str(missing_residue))
     f = open("IncorrectNumberingPDB.txt", "w")
     f.write(str(error_pdbs))
+    f.write(str(missing_residue))
     f.close()
     return dist_list
 
