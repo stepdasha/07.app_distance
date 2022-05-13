@@ -26,9 +26,9 @@ This app measures a distance between two residues CA in all SARS-CoV-2 Spike str
 # Sidebar
 with st.sidebar.header('Enter residues between which you measure distance. Note: residues should be in the same chain'):
     resid_1 = st.sidebar.text_input("Input residue 1 id")
-    resName_1 = st.sidebar.text_input("Input residue 1 name")
+    #resName_1 = st.sidebar.text_input("Input residue 1 name")
     resid_2 = st.sidebar.text_input("Input residue 2 id")
-    resName_2 = st.sidebar.text_input("Input residue 2 name")
+    #resName_2 = st.sidebar.text_input("Input residue 2 name")
     st.sidebar.markdown("""
 """)
 
@@ -38,7 +38,7 @@ if st.sidebar.button('Measure'):
     st.write(load_data)
 
     with st.spinner("Measuring distance"):
-        dist = distance(load_data, resid_1, resName_1, resid_2,  resName_2)
+        dist = distance(load_data, resid_1, resid_2)
 
 
     # Read in calculated descriptors and display the dataframe
