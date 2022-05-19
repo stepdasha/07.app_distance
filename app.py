@@ -16,31 +16,43 @@ from distance import *
 
 # Page title
 st.markdown("""
-# Distance measurement app for SARS-CoV-2 Spike PDB structures.
+# Distance measurement program for SARS-CoV-2 Spike PDB structures.
 
-This app measures a distance between two residues CA in all SARS-CoV-2 Spike structures deposited to PDB.
+This program measures a distance between two residues CA atoms in all SARS-CoV-2 (Uniprot ID P0DTC2) Spike structures deposited to PDB.
 
 ---
 """)
 
 # Sidebar
-with st.sidebar.header('Enter residues between which you measure distance. Note: residues should be in the same chain'):
-    chain_1 = st.sidebar.text_input("Input chain of residue 1 (A, B or C)")
+with st.sidebar.header('Enter residues between which you measure distance.'):
     resid_1 = st.sidebar.text_input("Input residue 1 id")
     #resName_1 = st.sidebar.text_input("Input residue 1 name")
-    chain_2 = st.sidebar.text_input("Input chain of residue 2 (A, B or C)")
     resid_2 = st.sidebar.text_input("Input residue 2 id")
     #resName_2 = st.sidebar.text_input("Input residue 2 name")
+
+    st.sidebar.markdown("""
+""")
+
+with st.sidebar.header(''):
+    option = st.selectbox(
+        'Are residues in the same chain?',
+        ('same', 'different'))
     st.sidebar.markdown("""
 """)
 
 if st.sidebar.button('Measure'):
-    load_data = get_spike_ids()
+    pdb_ids = get_spike_ids()
     st.header('**Available pdb structures**')
-    st.write(load_data)
+    st.write(pdb_ids)
+
+    with st.spinner("Loading and checking PDBs"):
+        pdb_ids_updated = pdb_load_check(pdb_ids)
 
     with st.spinner("Measuring distance"):
-        dist = distance(load_data, chain_1, resid_1, chain_2, resid_2)
+        if option == 'different':
+            dist = distance_dif(pdb_ids_updated, resid_1, resid_2)
+        elif option == 'same':
+            dist = distance_same(pdb_ids_updated, resid_1, resid_2)
 
 
     # Read in calculated descriptors and display the dataframe
