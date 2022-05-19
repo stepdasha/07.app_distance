@@ -57,7 +57,7 @@ def get_spike_ids(uniprot_id="P0DTC2", min_weight=400, max_resolution=4.0):
           f"resolution less than or equal to {max_resolution}A with mass more than or equal to {min_weight}: {len(pdb_ids)}")
     return (pdb_ids)
 
-def distance(pdb_ids, resid_1,  resid_2):
+def distance(pdb_ids, chain_1, resid_1,  chain_2, resid_2):
 
     # pdb_ids = ['6xm0', '6xr8']
     if not os.path.exists('PDB'):
@@ -67,31 +67,60 @@ def distance(pdb_ids, resid_1,  resid_2):
     missing_residue = []
 
     for i in tqdm(pdb_ids):
+        pdb_flag = False
         cmd.delete("*")
         cmd.fetch(i, path='./PDB/')
-        for chain in ['A', 'B', 'C']:
+        chains = ['A', 'B', 'C']
+        chain_3 = [x for x in chains if x not in (chain_1, chain_2)][0]
+        #st.write('chain 3', chain_3)
+        chains_ordered = [chain_1, chain_2, chain_3]
+        for j in range(0, 3):
             try:
                 #sanity check that the numbering is correct, check if 1000 is ARG in chain A B C
-                cmd.get_distance(atom1=f'chain {chain} and i. 1000 and r. ARG and n. CA',
-                                 atom2=f'chain {chain} and i. 1001 and n. CA')
+                cmd.get_distance(atom1=f'chain {chains_ordered[j]} and i. 1000 and r. ARG and n. CA',
+                                 atom2=f'chain {chains_ordered[j]} and i. 1001 and n. CA')
             except CmdException:
                 error_pdbs.append(i)
+                pdb_flag = True # problem with pdb
+                break
 
-            else:
+        if pdb_flag == False:
+            for j in range(0,3):
                 try:
-                    dist = cmd.get_distance(atom1=f'chain {chain} and i. {resid_1} and n. CA',
-                                        atom2=f'chain {chain} and i. {resid_2} and n. CA')
-                    dist_list[i].append(dist)
+                    # sanity check that the numbering is correct, check if 1000 is ARG in chain A B C
+                    cmd.get_distance(atom1=f'chain {chains_ordered[0]} and i. 1000 and r. ARG and n. CA',
+                                     atom2=f'chain {chains_ordered[1]} and i. 1001 and n. CA')
+
+                    cmd.get_distance(atom1=f'chain {chains_ordered[1]} and i. 1000 and r. ARG and n. CA',
+                                     atom2=f'chain {chains_ordered[2]} and i. 1001 and n. CA')
+
+                except CmdException:
+                    error_pdbs.append(i)
+                    break
+
+                try:
+                    if j == 2 :
+                        dist1 = cmd.get_distance(atom1=f'chain {chains_ordered[j]} and i. {resid_1} and n. CA',
+                                                atom2=f'chain {chains_ordered[0]} and i. {resid_2} and n. CA')
+                        dist2 = cmd.get_distance(atom1=f'chain {chains_ordered[0]} and i. {resid_1} and n. CA',
+                                                atom2=f'chain {chains_ordered[j]} and i. {resid_2} and n. CA')
+                        dist = min(dist1, dist2)
+                        dist_list[i].append(dist)
+                    else:
+                        dist1 = cmd.get_distance(atom1=f'chain {chains_ordered[j]} and i. {resid_1} and n. CA',
+                                            atom2=f'chain {chains_ordered[j + 1]} and i. {resid_2} and n. CA')
+                        dist2 = cmd.get_distance(atom1=f'chain {chains_ordered[j + 1]} and i. {resid_1} and n. CA',
+                                            atom2=f'chain {chains_ordered[j]} and i. {resid_2} and n. CA')
+                        dist = min(dist1, dist2)
+                        dist_list[i].append(dist)
+
                 except CmdException:
                     missing_residue.append(i)
 
 
-
-
-
     #print(f'There are {len(error_pdbs)} incorrectly numbered PDBs: ', str(error_pdbs) )
     st.header('**Incorrectly numbered pdbs**')
-    st.write(f'There are {len(error_pdbs)} chains with 1000 ARG error:', str(error_pdbs))
+    st.write(f'There are {len(error_pdbs)} structures with 1000 ARG error in at least one chain:', str(error_pdbs))
     st.write(f'There are {len(missing_residue)} chains with chosen residue error:', str(missing_residue))
     f = open("IncorrectNumberingPDB.txt", "w")
     f.write(str(error_pdbs))

@@ -1,0 +1,6 @@
+conda create --name structure_home
+conda activate structure_home
+conda install jupyter notebook  matplotlib
+conda install -c conda-forge tqdm
+brew install brewsci/bio/pymol
+conda install -c conda-forge streamlit
