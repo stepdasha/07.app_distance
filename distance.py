@@ -66,13 +66,13 @@ def pdb_load_check(pdb_ids):
 
     for i in tqdm(pdb_ids):
         i = i.lower()
-        pdb_flag = False
         cmd.delete("*")
         #cmd.fetch(i, path='./PDB/')
-        try:
-            cmd.fetch(i, path='./PDB/', type='pdb')
-        except:
-            cmd.fetch(i, path='./PDB/', type='cif')
+        file = cmd.fetch(i, path='./PDB/', type='pdb')
+        if  file != i:
+            cmd.fetch(i, path='./PDB/')
+            #st.write("cif instead of pdb is fetched")
+
         #else:
         #    st.write(f'could not load {i}' )
 
@@ -102,11 +102,13 @@ def distance_dif(pdb_ids, resid_1,  resid_2):
         for i in tqdm(pdb_ids):
             i = i.lower()
             cmd.delete("*")
-            #cmd.load("./PDB/" + i + ".cif")
+
             try:
                 cmd.load("./PDB/" + i + ".pdb")
-            except:
-                cmd.load("./PDB/" + i + ".cif" )
+            except CmdException:
+                cmd.load("./PDB/" + i + ".cif")
+                #st.write('load cif from folder')
+
 
             for j in range(0,3):
                 try:
@@ -126,11 +128,11 @@ def distance_dif(pdb_ids, resid_1,  resid_2):
                         dist_list[i].append(dist)
                 except CmdException:
                     missing_residue.append(i.upper())
-                    break
+                    #break
 
         st.header('**Incorrectly numbered pdbs**')
-        st.write(f'There are {len(missing_residue)} pdbs with a problem in chosen residue error in at least one chain:', str(missing_residue))
-        f = open("IncorrectNumberingPDB.txt", "w")
+        st.write(f'There are {len(missing_residue)} chains with a problem in chosen residue:', str(missing_residue))
+        f = open("IncorrectNumberingPDB.txt", "a")
         f.write(str(missing_residue))
         f.close()
         return dist_list
@@ -140,7 +142,12 @@ def distance_same(pdb_ids, resid_1,  resid_2):
     missing_residue = []
     for i in tqdm(pdb_ids):
         cmd.delete("*")
-        cmd.load("./PDB/" + i + ".cif")
+
+        try:
+            cmd.load("./PDB/" + i + ".pdb")
+        except CmdException:
+            cmd.load("./PDB/" + i + ".cif")
+            #st.write('load cif from folder')
 
         for chain in ['A', 'B', 'C']:
             try:
@@ -151,9 +158,9 @@ def distance_same(pdb_ids, resid_1,  resid_2):
                 missing_residue.append(i)
 
     st.header('**Incorrectly numbered pdbs**')
-    st.write(f'There are {len(missing_residue)} pdbs with a problem in chosen residue error in at least one chain:',
-             str(missing_residue))
-    f = open("IncorrectNumberingPDB.txt", "w")
+    st.write(f'There are {len(missing_residue)} chains with a problem in chosen residue:', str(missing_residue))
+
+    f = open("IncorrectNumberingPDB.txt", "a")
     f.write(str(missing_residue))
     f.close()
     return dist_list
