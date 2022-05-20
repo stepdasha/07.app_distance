@@ -26,9 +26,9 @@ This program measures a distance between two residues CA atoms in all SARS-CoV-2
 # Sidebar
 with st.sidebar.header('Enter residues between which you measure distance.'):
     resid_1 = st.sidebar.text_input("Input residue 1 id")
-    #resName_1 = st.sidebar.text_input("Input residue 1 name")
+    atom_1 = st.sidebar.text_input("Input residue 1 atom name")
     resid_2 = st.sidebar.text_input("Input residue 2 id")
-    #resName_2 = st.sidebar.text_input("Input residue 2 name")
+    atom_2 = st.sidebar.text_input("Input residue 2 atom name")
 
     st.sidebar.markdown("""
 """)
@@ -50,9 +50,9 @@ if st.sidebar.button('Measure'):
 
     with st.spinner("Measuring distance"):
         if option == 'different':
-            dist = distance_dif(pdb_ids_updated, resid_1, resid_2)
+            dist = distance_dif(pdb_ids_updated, resid_1, resid_2, atom_1, atom_2)
         elif option == 'same':
-            dist = distance_same(pdb_ids_updated, resid_1, resid_2)
+            dist = distance_same(pdb_ids_updated, resid_1, resid_2, atom_1, atom_2)
 
 
     # Read in calculated descriptors and display the dataframe
