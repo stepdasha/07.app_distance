@@ -98,12 +98,17 @@ def pdb_load_check(pdb_ids):
 def distance_dif(pdb_ids, resid_1,  resid_2, atom_1, atom_2):
         if not os.path.exists('error_residue'):
             os.mkdir('error_residue')
-        chains_ordered = ['A', 'B', 'C']
+        #chains_ordered = ['A', 'B', 'C']
+
+        # make a chain order
+
         dist_list = collections.defaultdict(list)  # empty dictionary for future rmsd
         missing_residue = []
         for i in tqdm(pdb_ids):
-            i = i.lower()
             cmd.delete("*")
+            chains_ordered = ['A']
+
+            i = i.lower()
 
             try:
                 cmd.load("./PDB/" + i + ".pdb")
@@ -111,22 +116,38 @@ def distance_dif(pdb_ids, resid_1,  resid_2, atom_1, atom_2):
                 cmd.load("./PDB/" + i + ".cif")
                 #st.write('load cif from folder')
 
+            dist1 = cmd.get_distance(atom1=f'chain A and i. 971 and n. CA',
+                                     atom2=f'chain B and i. 752 and n. CA')
+
+            dist2 = cmd.get_distance(atom1=f'chain A and i. 971 and n. CA',
+                                     atom2=f'chain C and i. 752 and n. CA')
+
+            if min(dist1, dist2) == dist1:
+                chains_ordered.append('B')
+                chains_ordered.append('C')
+            elif min(dist1, dist2) == dist2:
+                chains_ordered.append('C')
+                chains_ordered.append('B')
 
             for j in range(0,3):
                 try:
                     if j == 2 :
-                        dist1 = cmd.get_distance(atom1=f'chain {chains_ordered[j]} and i. {resid_1} and n. {atom_1}',
+                        #dist1 = cmd.get_distance(atom1=f'chain {chains_ordered[j]} and i. {resid_1} and n. {atom_1}',
+                         #                       atom2=f'chain {chains_ordered[0]} and i. {resid_2} and n. {atom_2}')
+                        #dist2 = cmd.get_distance(atom1=f'chain {chains_ordered[0]} and i. {resid_1} and n. {atom_1}',
+                        #                        atom2=f'chain {chains_ordered[j]} and i. {resid_2} and n. {atom_2}')
+                        #dist = min(dist1, dist2)
+                        dist = cmd.get_distance(atom1=f'chain {chains_ordered[j]} and i. {resid_1} and n. {atom_1}',
                                                 atom2=f'chain {chains_ordered[0]} and i. {resid_2} and n. {atom_2}')
-                        dist2 = cmd.get_distance(atom1=f'chain {chains_ordered[0]} and i. {resid_1} and n. {atom_1}',
-                                                atom2=f'chain {chains_ordered[j]} and i. {resid_2} and n. {atom_2}')
-                        dist = min(dist1, dist2)
                         dist_list[i].append(dist)
                     else:
-                        dist1 = cmd.get_distance(atom1=f'chain {chains_ordered[j]} and i. {resid_1} and n. {atom_1}',
+                        #dist1 = cmd.get_distance(atom1=f'chain {chains_ordered[j]} and i. {resid_1} and n. {atom_1}',
+                        #                    atom2=f'chain {chains_ordered[j + 1]} and i. {resid_2} and n. {atom_2}')
+                        #dist2 = cmd.get_distance(atom1=f'chain {chains_ordered[j + 1]} and i. {resid_1} and n. {atom_1}',
+                        #                   atom2=f'chain {chains_ordered[j]} and i. {resid_2} and n. {atom_2}')
+                        #dist = min(dist1, dist2)
+                        dist = cmd.get_distance(atom1=f'chain {chains_ordered[j]} and i. {resid_1} and n. {atom_1}',
                                             atom2=f'chain {chains_ordered[j + 1]} and i. {resid_2} and n. {atom_2}')
-                        dist2 = cmd.get_distance(atom1=f'chain {chains_ordered[j + 1]} and i. {resid_1} and n. {atom_1}',
-                                            atom2=f'chain {chains_ordered[j]} and i. {resid_2} and n. {atom_2}')
-                        dist = min(dist1, dist2)
                         dist_list[i].append(dist)
                 except CmdException:
                     missing_residue.append(i.upper())
