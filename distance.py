@@ -1,14 +1,14 @@
 import biotite.database.rcsb as rcsb
 import datetime
-import pymol
+#import pymol
 from pymol import *
 import collections
-from collections import defaultdict
+#from collections import defaultdict
 from tqdm.auto import tqdm
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-import csv
+#import csv
 
 import streamlit as st
 
@@ -96,6 +96,8 @@ def pdb_load_check(pdb_ids):
 
 
 def distance_dif(pdb_ids, resid_1,  resid_2, atom_1, atom_2):
+        if not os.path.exists('error_residue'):
+            os.mkdir('error_residue')
         chains_ordered = ['A', 'B', 'C']
         dist_list = collections.defaultdict(list)  # empty dictionary for future rmsd
         missing_residue = []
@@ -132,7 +134,8 @@ def distance_dif(pdb_ids, resid_1,  resid_2, atom_1, atom_2):
 
         st.header('**Incorrectly numbered pdbs**')
         st.write(f'There are {len(missing_residue)} chains with a problem in chosen residue:', str(missing_residue))
-        f = open("IncorrectNumberingPDB.txt", "a")
+        error_file_name = './error_residue/errorsPDB_' + str(resid_1) + str(atom_1) + '_' + str(resid_2) + str(atom_2) + '.txt'
+        f = open(error_file_name, "w")
         f.write(str(missing_residue))
         f.close()
         return dist_list
@@ -140,6 +143,8 @@ def distance_dif(pdb_ids, resid_1,  resid_2, atom_1, atom_2):
 def distance_same(pdb_ids, resid_1,  resid_2, atom_1, atom_2):
     dist_list = collections.defaultdict(list)  # empty dictionary for future rmsd
     missing_residue = []
+    if not os.path.exists('error_residue'):
+        os.mkdir('error_residue')
     for i in tqdm(pdb_ids):
         cmd.delete("*")
 
@@ -159,19 +164,25 @@ def distance_same(pdb_ids, resid_1,  resid_2, atom_1, atom_2):
 
     st.header('**Incorrectly numbered pdbs**')
     st.write(f'There are {len(missing_residue)} chains with a problem in chosen residue:', str(missing_residue))
-
-    f = open("IncorrectNumberingPDB.txt", "a")
+    error_file_name = './error_residue/errorsPDB_' + str(resid_1) + str(atom_1) + '_' + str(resid_2) + str(atom_2) + '.txt'
+    f = open(error_file_name, "w")
     f.write(str(missing_residue))
     f.close()
     return dist_list
 
-def analysis(distancesDict):
+def analysis(distancesDict, resid_1, atom_1, resid_2, atom_2):
     """
     plot the histogram of distances
     """
     distances_only = list(distancesDict.values())
 
     st.write(f'Number of structures with at least one analyzed chain {len(distancesDict)}')
+
+    if not os.path.exists('plots'):
+        os.mkdir('plots')
+
+    if not os.path.exists('distances'):
+        os.mkdir('distances')
 
     fig = plt.figure(figsize=(15, 7.5))
     plt.hist(np.hstack(distances_only), bins=100, color="skyblue", edgecolor='white')
@@ -185,9 +196,12 @@ def analysis(distancesDict):
     st.pyplot(fig)
 
     df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in distancesDict.items()])).transpose()
-    df.to_csv("distancesDF.csv")
+    name = str(resid_1) + str(atom_1) + '_' + str(resid_2) + str(atom_2)
+    df_name = './distances/distance_' + name + '.csv'
+    df.to_csv(df_name)
     st.write(df)
-    plt.savefig('distance.png', bbox_inches='tight')
+    plt_name = './plots/distance_' + name + '.png'
+    plt.savefig(plt_name, bbox_inches='tight')
     #print(f'number of corrected numbered and analyzed structures {len(distancesDict)}')
     #return distances_only
 

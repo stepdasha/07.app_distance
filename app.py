@@ -1,12 +1,12 @@
-import streamlit as st
-import pandas as pd
-from PIL import Image
-import subprocess
-import os
-import base64
-import pickle
+#import streamlit as st
+#import pandas as pd
+#from PIL import Image
+#import subprocess
+#import os
+#import base64
+#import pickle
+#import distance
 
-import distance
 from distance import *
 
 # Logo image
@@ -57,7 +57,7 @@ if st.sidebar.button('Measure'):
 
     # Read in calculated descriptors and display the dataframe
     st.header('**Histogram of distances**')
-    analysis(dist)
+    analysis(dist, resid_1, atom_1, resid_2, atom_2)
    # st.write(desc)
     #st.write(desc.shape)
 
