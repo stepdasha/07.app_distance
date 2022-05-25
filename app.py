@@ -24,7 +24,7 @@ This program measures a distance between two residues CA atoms in all SARS-CoV-2
 """)
 
 # Sidebar
-with st.sidebar.header('Enter residues between which you measure distance.'):
+with st.sidebar.header('Enter residues between which you measure distance. For now result may depend on the input order. Try to name them counterclockwise first.'):
     resid_1 = st.sidebar.text_input("Input residue 1 id")
     atom_1 = st.sidebar.text_input("Input residue 1 atom name")
     resid_2 = st.sidebar.text_input("Input residue 2 id")
