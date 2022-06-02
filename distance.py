@@ -13,6 +13,7 @@ import numpy as np
 import streamlit as st
 
 import pandas as pd
+import shutil
 
 def get_spike_ids(uniprot_id="P0DTC2", min_weight=400, max_resolution=4.0):
     """
@@ -68,9 +69,15 @@ def pdb_load_check(pdb_ids):
         i = i.lower()
         cmd.delete("*")
         #cmd.fetch(i, path='./PDB/')
-        file = cmd.fetch(i, path='./PDB/', type='pdb')
-        if  file != i:
-            cmd.fetch(i, path='./PDB/')
+        if os.path.exists('./PDB/' + i + '.pdb'):
+            cmd.load("./PDB/" + i + ".pdb")
+        elif os.path.exists('./PDB/' + i + '.cif') :
+            cmd.load("./PDB/" + i + ".cif")
+        else:
+            file = cmd.fetch(i, path='./PDB/', type='pdb')
+            #st.write(file)
+            if  file != i:
+                cmd.fetch(i, path='./PDB/')
             #st.write("cif instead of pdb is fetched")
 
         #else:
@@ -103,7 +110,9 @@ def distance_dif(pdb_ids, resid_1,  resid_2, atom_1, atom_2):
         # make a chain order
 
         dist_list = collections.defaultdict(list)  # empty dictionary for future rmsd
+        dist_list_reverse = collections.defaultdict(list) # empty dictionary for future rmsd from reverse
         missing_residue = []
+        missing_residue_reverse = []
         for i in tqdm(pdb_ids):
             cmd.delete("*")
             chains_ordered = ['A']
@@ -132,20 +141,11 @@ def distance_dif(pdb_ids, resid_1,  resid_2, atom_1, atom_2):
             for j in range(0,3):
                 try:
                     if j == 2 :
-                        #dist1 = cmd.get_distance(atom1=f'chain {chains_ordered[j]} and i. {resid_1} and n. {atom_1}',
-                         #                       atom2=f'chain {chains_ordered[0]} and i. {resid_2} and n. {atom_2}')
-                        #dist2 = cmd.get_distance(atom1=f'chain {chains_ordered[0]} and i. {resid_1} and n. {atom_1}',
-                        #                        atom2=f'chain {chains_ordered[j]} and i. {resid_2} and n. {atom_2}')
-                        #dist = min(dist1, dist2)
                         dist = cmd.get_distance(atom1=f'chain {chains_ordered[j]} and i. {resid_1} and n. {atom_1}',
                                                 atom2=f'chain {chains_ordered[0]} and i. {resid_2} and n. {atom_2}')
                         dist_list[i].append(dist)
                     else:
-                        #dist1 = cmd.get_distance(atom1=f'chain {chains_ordered[j]} and i. {resid_1} and n. {atom_1}',
-                        #                    atom2=f'chain {chains_ordered[j + 1]} and i. {resid_2} and n. {atom_2}')
-                        #dist2 = cmd.get_distance(atom1=f'chain {chains_ordered[j + 1]} and i. {resid_1} and n. {atom_1}',
-                        #                   atom2=f'chain {chains_ordered[j]} and i. {resid_2} and n. {atom_2}')
-                        #dist = min(dist1, dist2)
+
                         dist = cmd.get_distance(atom1=f'chain {chains_ordered[j]} and i. {resid_1} and n. {atom_1}',
                                             atom2=f'chain {chains_ordered[j + 1]} and i. {resid_2} and n. {atom_2}')
                         dist_list[i].append(dist)
@@ -153,15 +153,32 @@ def distance_dif(pdb_ids, resid_1,  resid_2, atom_1, atom_2):
                     missing_residue.append(i.upper())
                     #break
 
+            #test for the second plot in other direction
+            for j in range(0, 3):
+                try:
+                    if j == 2:
+                        dist_reverse = cmd.get_distance(atom1=f'chain {chains_ordered[0]} and i. {resid_1} and n. {atom_1}',
+                                                atom2=f'chain {chains_ordered[j]} and i. {resid_2} and n. {atom_2}')
+                        dist_list_reverse[i].append(dist_reverse)
+                    else:
+
+                        dist_reverse = cmd.get_distance(atom1=f'chain {chains_ordered[j + 1]} and i. {resid_1} and n. {atom_1}',
+                                                atom2=f'chain {chains_ordered[j]} and i. {resid_2} and n. {atom_2}')
+                        dist_list_reverse[i].append(dist_reverse)
+                except CmdException:
+                    missing_residue_reverse.append(i.upper())
+                    # break
+
         st.header('**Incorrectly numbered pdbs**')
         st.write(f'There are {len(missing_residue)} chains with a problem in chosen residue:', str(missing_residue))
         error_file_name = './error_residue/errorsPDB_' + str(resid_1) + str(atom_1) + '_' + str(resid_2) + str(atom_2) + '.txt'
         f = open(error_file_name, "w")
         f.write(str(missing_residue))
+        f.write(str(missing_residue_reverse))
         f.close()
-        return dist_list
+        return dist_list, dist_list_reverse
 
-def distance_same(pdb_ids, resid_1,  resid_2, atom_1, atom_2):
+def distance_same(pdb_ids, resid_1,  resid_2, atom_1, atom_2, flag):
     dist_list = collections.defaultdict(list)  # empty dictionary for future rmsd
     missing_residue = []
     if not os.path.exists('error_residue'):
@@ -191,7 +208,8 @@ def distance_same(pdb_ids, resid_1,  resid_2, atom_1, atom_2):
     f.close()
     return dist_list
 
-def analysis(distancesDict, resid_1, atom_1, resid_2, atom_2):
+
+def analysis(distancesDict, resid_1, atom_1, resid_2, atom_2, flag):
     """
     plot the histogram of distances
     """
@@ -218,14 +236,16 @@ def analysis(distancesDict, resid_1, atom_1, resid_2, atom_2):
 
     df = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in distancesDict.items()])).transpose()
     name = str(resid_1) + str(atom_1) + '_' + str(resid_2) + str(atom_2)
-    df_name = './distances/distance_' + name + '.csv'
+    df_name = './distances/distance_' + name + '_' + flag +'.csv'
     df.to_csv(df_name)
     st.write(df)
-    plt_name = './plots/distance_' + name + '.png'
+    plt_name = './plots/distance_' + name + '_' + flag +'.png'
     plt.savefig(plt_name, bbox_inches='tight')
     #print(f'number of corrected numbered and analyzed structures {len(distancesDict)}')
     #return distances_only
 
+def delete_PDB_folder():
+        shutil.rmtree('./PDB')
 
 #pdb_ids = get_spike_ids()
 ##dist = distance(pdb_ids, 318, 'PHE', 292,  'ALA')

@@ -50,14 +50,22 @@ if st.sidebar.button('Measure'):
 
     with st.spinner("Measuring distance"):
         if option == 'different':
-            dist = distance_dif(pdb_ids_updated, resid_1, resid_2, atom_1, atom_2)
-        elif option == 'same':
-            dist = distance_same(pdb_ids_updated, resid_1, resid_2, atom_1, atom_2)
+            dist, dist_reverse = distance_dif(pdb_ids_updated, resid_1, resid_2, atom_1, atom_2)
+            st.header('**Histogram of distances**')
+            analysis(dist, resid_1, atom_1, resid_2, atom_2, flag = 'diff1')
+            analysis(dist_reverse, resid_1, atom_1, resid_2, atom_2, flag = 'diff2')
 
+        elif option == 'same':
+            dist = distance_same(pdb_ids_updated, resid_1, resid_2, atom_1, atom_2, flag = 'same')
+            st.header('**Histogram of distances**')
+            analysis(dist, resid_1, atom_1, resid_2, atom_2, flag= 'same')
+
+    #uncomment if want to delete all PDB files
+    #delete_PDB_folder()
 
     # Read in calculated descriptors and display the dataframe
-    st.header('**Histogram of distances**')
-    analysis(dist, resid_1, atom_1, resid_2, atom_2)
+    #st.header('**Histogram of distances**')
+    #analysis(dist, resid_1, atom_1, resid_2, atom_2)
    # st.write(desc)
     #st.write(desc.shape)
 
