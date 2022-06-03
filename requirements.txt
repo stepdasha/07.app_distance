@@ -1,5 +1,5 @@
 biotite==0.32.0
-pymol-open-source==2.5.0
+pymol-open-source
 tqdm==4.63.0
 matplotlib==3.5.1
 numpy==1.22.3
