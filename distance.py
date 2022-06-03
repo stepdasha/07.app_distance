@@ -1,14 +1,11 @@
 import biotite.database.rcsb as rcsb
 import datetime
-#import pymol
 from pymol import *
 import collections
-#from collections import defaultdict
 from tqdm.auto import tqdm
 import os
 import matplotlib.pyplot as plt
 import numpy as np
-#import csv
 
 import streamlit as st
 
