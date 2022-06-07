@@ -1,7 +1,7 @@
 name: structure
 channels:
-  - anaconda
   - conda-forge
+  - anaconda
   - defaults
 dependencies:
 - pymol-open-source
