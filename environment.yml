@@ -1,13 +1,12 @@
 name: structure
 channels:
-  - conda-forge
-  - anaconda
   - defaults
+  - conda-forge
 dependencies:
-- pymol-open-source
-- tqdm
-- matplotlib
-- numpy
-- streamlit
-- pandas
-- biotite
+- pymol-open-source=2.5.0
+- tqdm=4.63.0
+- matplotlib=3.5.1
+- numpy=1.22.3
+- streamlit=1.8.1
+- pandas=1.4.2
+- biotite=0.32.0
